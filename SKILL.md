@@ -23,10 +23,18 @@ Install the `laid` shell command in the user's local profile files, then verify 
 
 - **Windows**:
   - Reload with `. $PROFILE.CurrentUserAllHosts` after default install, or tell the user to open a new PowerShell session.
-  - Verify with `Get-Command laid` and `laid`.
+  - Verify with `Get-Command laid`, `laid`, and `laid -Json` when a machine-readable dump is needed.
 - **Linux**:
   - Reload with `source ~/.bashrc` or `source ~/.zshrc`, or tell the user to open a new shell.
   - Verify with `command -v laid` and `laid`.
+
+## Key behavior
+
+- `laid` prints compact stable keys intended for routing and config storage.
+- Linux example: `VID_8765&PID_5678:USB_0_4_3_1_0`
+- Windows example: `VID_8765&PID_5678:12345678_0000`
+- The key intentionally does not embed the full device name. Names stay in separate output fields so routing remains stable even if the visible label changes.
+- When a project stores audio routing in a config file, use `laid` output as the source of truth for the saved `playback_device_key`.
 
 ## Editing rules
 
