@@ -1,4 +1,4 @@
 interface:
-  display_name: "ListenAI Laid Installer"
-  short_description: "Install laid for PowerShell and bash/zsh"
-  default_prompt: "Install or refresh the laid command on this machine."
+  display_name: "ListenAI 音频命令安装器"
+  short_description: "安装 laid 并列出 Windows 通用声卡端点"
+  default_prompt: "安装或刷新本机的 laid 和 audio-list 命令。"

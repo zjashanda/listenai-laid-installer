@@ -1,49 +1,47 @@
 ---
 name: listenai-laid-installer
-description: Install or refresh the `laid` shortcut command that lists stable USB audio device keys and channel counts for ListenAI testing. Use when Codex needs to set up, repair, or verify `laid` on Windows PowerShell or Linux bash/zsh, migrate the helper to another machine, or explain how the local installation works.
+description: 安装或更新用于 ListenAI 测试的 `laid` 命令，并在 Windows 提供通用声卡端点列表 `audio-list`。当需要设置、修复或验证 PowerShell/bash/zsh 的 `laid`，查询 Windows 声卡端点、稳定 USB 设备标识和通道数，或迁移、说明本地命令工作方式时使用。
 ---
 
-# ListenAI laid installer
+# ListenAI laid 安装与音频端点枚举
 
-Install the `laid` shell command in the user's local profile files, then verify it works and shows channel counts.
+在用户的 shell profile 中安装 `laid` 命令，并验证它能显示 ListenAI 设备的稳定标识和通道数。Windows 同时安装通用声卡端点命令 `audio-list`。
 
-## Workflow
+## 命令说明
 
-1. Detect the target platform and shell family.
-2. Run the matching installer from `scripts/`.
-3. Reload the modified profile or tell the user exactly what to reload.
-4. Verify `laid` resolves and returns device keys.
+- `laid`：仅列出名称为 `ListenAI Audio` 的活动端点，供 ListenAI 测试脚本稳定选择设备。
+- `audio-list`：仅限 Windows，默认列出所有活动采集/播放端点，包含方向、状态、通道数、名称、端点 ID 与 USB 稳定标识。
+- `audio-list -Direction Capture`：仅列出采集端点。
+- `audio-list -IncludeDisabled`：同时包含禁用、未连接和不存在的端点。
+- `audio-list -Json`：输出 JSON，便于脚本调用。
 
-## Platform guide
+`audio-list` 中的 USB 设备会尽量格式化为 `VID_xxxx&PID_xxxx:<稳定尾标识>`；非 USB 设备保留其 Windows 接口标识。
 
-- **Windows PowerShell**: Run `scripts/install_laid_windows.ps1`. Default to `CurrentUserAllHosts` so the helper is available in every PowerShell host for the current user. Use `-Scope CurrentUserCurrentHost` only when the user wants host-specific installation.
-- **Linux bash/zsh**: Run `scripts/install_laid_linux.sh`. By default it updates both `~/.bashrc` and `~/.zshrc`. Pass `bash` or `zsh` to target only one shell. Linux channel counts are best-effort values parsed from `/proc/asound/card*/stream*`.
+## 工作流程
 
-## Validation
+1. 识别目标平台和 shell 类型。
+2. 执行 `scripts/` 中对应的安装脚本。
+3. 重新加载已修改的 profile，或明确告知用户需要执行的加载命令。
+4. 验证 `laid` 可解析且返回 ListenAI 设备；在 Windows 验证 `audio-list` 能返回通用端点和通道数。
 
-- **Windows**:
-  - Reload with `. $PROFILE.CurrentUserAllHosts` after default install, or tell the user to open a new PowerShell session.
-  - Verify with `Get-Command laid`, `laid`, and `laid -Json` when a machine-readable dump is needed.
-- **Linux**:
-  - Reload with `source ~/.bashrc` or `source ~/.zshrc`, or tell the user to open a new shell.
-  - Verify with `command -v laid` and `laid`.
+## 平台说明
 
-## Key behavior
+- **Windows PowerShell**：执行 `scripts/install_laid_windows.ps1`。默认使用 `CurrentUserAllHosts`，使当前用户的全部 PowerShell host 都可使用这些命令；仅在用户明确要求 host 专用配置时使用 `-Scope CurrentUserCurrentHost`。
+- **Linux bash/zsh**：执行 `scripts/install_laid_linux.sh`。默认同时更新 `~/.bashrc` 和 `~/.zshrc`；传入 `bash` 或 `zsh` 可只更新指定 shell。Linux 的通道数从 `/proc/asound/card*/stream*` 解析，属于尽力而为的结果。
 
-- `laid` prints compact stable keys intended for routing and config storage.
-- Linux example: `VID_8765&PID_5678:USB_0_4_3_1_0`
-- Windows example: `VID_8765&PID_5678:12345678_0000`
-- The key intentionally does not embed the full device name. Names stay in separate output fields so routing remains stable even if the visible label changes.
-- When a project stores audio routing in a config file, use `laid` output as the source of truth for the saved `playback_device_key`.
+## 验证
 
-## Editing rules
+- **Windows**：默认安装后执行 `. $PROFILE.CurrentUserAllHosts`，或打开新的 PowerShell 会话；使用 `Get-Command laid,audio-list`、`laid` 和 `audio-list` 验证。
+- **Linux**：执行 `source ~/.bashrc` 或 `source ~/.zshrc`，也可打开新的 shell；使用 `command -v laid` 和 `laid` 验证。
 
-- Preserve unrelated user content in profile files.
-- Replace only the block between `# >>> laid >>>` and `# <<< laid <<<`.
-- Keep the installers idempotent so repeated execution refreshes the helper instead of duplicating it.
-- If the user asks how the local installation works, explain that `laid` is installed by writing a shell function into the user's profile/rc file rather than by creating a system-wide executable.
+## 编辑规则
 
-## Resources
+- 保留 profile 文件中与本工具无关的用户内容。
+- 仅替换 `# >>> laid >>>` 与 `# <<< laid <<<` 之间的内容。
+- 保持安装器幂等，重复执行时应刷新函数，不得重复追加。
+- `laid` 与 `audio-list` 都是写入用户 profile/rc 文件的 shell 函数，不会创建系统级可执行文件。
 
-- `scripts/install_laid_windows.ps1`: Install/update the PowerShell `laid` and `Get-ListenAIDeviceKeys` functions, including channel-count parsing from the endpoint mix format blob.
-- `scripts/install_laid_linux.sh`: Install/update the shell `laid` function in `~/.bashrc` and/or `~/.zshrc`, including best-effort channel parsing from ALSA stream info.
+## 资源
+
+- `scripts/install_laid_windows.ps1`：安装/更新 PowerShell 的 `laid`、`audio-list`、`Get-ListenAIDeviceKeys` 和 `Get-AudioEndpointList`，并从端点格式数据读取通道数。
+- `scripts/install_laid_linux.sh`：安装/更新 bash/zsh 的 `laid`，从 ALSA stream 信息尽力解析通道数。
