@@ -1,13 +1,11 @@
 # listenai-laid-installer
 
-安装或更新用于 ListenAI 测试的 `laid` 命令，并在 Windows 提供通用声卡端点列表 `audio-list`。当需要设置、修复或验证 PowerShell/bash/zsh 的 `laid`，查询 Windows 声卡端点、稳定 USB 设备标识和通道数，或迁移、说明本地命令工作方式时使用。
+已降级的文档入口：说明 `laid` / `audio-list` 的安装方式与验证步骤，并指向 `listenai-play` 里的唯一安装脚本。Use when 需要安装、修复或验证 PowerShell/bash/zsh 的 `laid`，查询 Windows 声卡端点与稳定 USB 标识时；实际执行请改用 `listenai-play`。
 
 ## Skill layout
 
-- `agents/openai.yaml`
-- `scripts/install_laid_linux.sh`
-- `scripts/install_laid_windows.ps1`
 - `SKILL.md`
+- `agents/openai.yaml`
 
 ## Install the skill
 
@@ -15,13 +13,19 @@ Copy this folder into:
 
 ```text
 ~/.codex/skills/listenai-laid-installer
+~/.config/opencode/skills/listenai-laid-installer
 ```
 
-Then restart Codex.
+Then restart Codex or OpenCode.
 
 ## Usage and workflow
 
-在用户的 shell profile 中安装 `laid` 命令，并验证它能显示 ListenAI 设备的稳定标识和通道数。Windows 同时安装通用声卡端点命令 `audio-list`。
+**本仓库已不再提供安装脚本副本。** 安装脚本的唯一来源是 [`zjashanda/listenai-play`](https://github.com/zjashanda/listenai-play)：
+
+- Windows：`listenai-play/scripts/install_laid_windows.ps1`（读取同目录 `audio_endpoints.ps1` 安装 `laid` 与 `audio-list`）
+- Linux bash/zsh：`listenai-play/scripts/install_laid_linux.sh`
+
+能力台账中本仓库 `status=archived`、`replaced_by=listenai-play`。保留本仓库只为历史文档可读；新增用法请写到 `listenai-play`。
 
 ## 命令说明
 
@@ -33,31 +37,47 @@ Then restart Codex.
 
 `audio-list` 中的 USB 设备会尽量格式化为 `VID_xxxx&PID_xxxx:<稳定尾标识>`；非 USB 设备保留其 Windows 接口标识。
 
-## 工作流程
+## 怎么安装
 
-1. 识别目标平台和 shell 类型。
-2. 执行 `scripts/` 中对应的安装脚本。
-3. 重新加载已修改的 profile，或明确告知用户需要执行的加载命令。
-4. 验证 `laid` 可解析且返回 ListenAI 设备；在 Windows 验证 `audio-list` 能返回通用端点和通道数。
+先准备 `listenai-play`（`~/.codex/skills/listenai-play` 或同级的 `listenai-play/` 目录），再执行：
+
+```powershell
+# Windows PowerShell
+powershell -ExecutionPolicy Bypass -File <listenai-play>/scripts/install_laid_windows.ps1
+. $PROFILE.CurrentUserAllHosts
+Get-Command laid,audio-list
+laid
+audio-list -Direction Capture
+```
+
+```bash
+# Linux bash/zsh
+bash <listenai-play>/scripts/install_laid_linux.sh
+source ~/.bashrc   # 或 source ~/.zshrc
+command -v laid && laid
+```
+
+Windows 默认写入 `CurrentUserAllHosts`，重复执行只刷新 `# >>> laid >>>` / `# <<< laid <<<` 标记块，不重复追加，也不动标记块外的用户内容。
 
 ## 平台说明
 
-- **Windows PowerShell**：执行 `scripts/install_laid_windows.ps1`。默认使用 `CurrentUserAllHosts`，使当前用户的全部 PowerShell host 都可使用这些命令；仅在用户明确要求 host 专用配置时使用 `-Scope CurrentUserCurrentHost`。
-- **Linux bash/zsh**：执行 `scripts/install_laid_linux.sh`。默认同时更新 `~/.bashrc` 和 `~/.zshrc`；传入 `bash` 或 `zsh` 可只更新指定 shell。Linux 的通道数从 `/proc/asound/card*/stream*` 解析，属于尽力而为的结果。
+- **Windows PowerShell**：`install_laid_windows.ps1` 默认写 `CurrentUserAllHosts`，使当前用户的全部 PowerShell host 都能用；仅在用户明确要求 host 专用配置时传 `-Scope CurrentUserCurrentHost`。
+- **Linux bash/zsh**：`install_laid_linux.sh` 默认同时更新 `~/.bashrc` 与 `~/.zshrc`；传 `bash` 或 `zsh` 可只更新指定 shell。Linux 的通道数从 `/proc/asound/card*/stream*` 解析，属尽力而为。
 
 ## 验证
 
-- **Windows**：默认安装后执行 `. $PROFILE.CurrentUserAllHosts`，或打开新的 PowerShell 会话；使用 `Get-Command laid,audio-list`、`laid` 和 `audio-list` 验证。
-- **Linux**：执行 `source ~/.bashrc` 或 `source ~/.zshrc`，也可打开新的 shell；使用 `command -v laid` 和 `laid` 验证。
+- **Windows**：`Get-Command laid,audio-list` 能解析；`laid` 返回 `ListenAI Audio` 端点；`audio-list -Direction Capture` 能看到麦克风通道数。
+- **Linux**：`command -v laid` 有输出；`laid` 能列出 ListenAI 端点（通道数来自 `/proc/asound/card*/stream*`，属尽力而为）。
 
-## 编辑规则
+## 编辑规则（迁移提示）
 
-- 保留 profile 文件中与本工具无关的用户内容。
-- 仅替换 `# >>> laid >>>` 与 `# <<< laid <<<` 之间的内容。
-- 保持安装器幂等，重复执行时应刷新函数，不得重复追加。
-- `laid` 与 `audio-list` 都是写入用户 profile/rc 文件的 shell 函数，不会创建系统级可执行文件。
+这些规则现在由 `listenai-play` 的安装脚本保证，改脚本请改那边：
+
+- 仅替换标记块内的内容，保留 profile 中与本工具无关的用户内容；
+- 安装器必须幂等，重复执行只能刷新函数，不得重复追加；
+- `laid` 与 `audio-list` 是写入用户 profile/rc 的 shell 函数，不创建系统级可执行文件。
 
 ## 资源
 
-- `scripts/install_laid_windows.ps1`：安装/更新 PowerShell 的 `laid`、`audio-list`、`Get-ListenAIDeviceKeys` 和 `Get-AudioEndpointList`，并从端点格式数据读取通道数。
-- `scripts/install_laid_linux.sh`：安装/更新 bash/zsh 的 `laid`，从 ALSA stream 信息尽力解析通道数。
+- 安装脚本：`listenai-play/scripts/install_laid_windows.ps1`、`listenai-play/scripts/install_laid_linux.sh`
+- 端点查询实现：`listenai-play/scripts/audio_endpoints.ps1`、`listenai-play/scripts/windows_audio.py`
