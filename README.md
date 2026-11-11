@@ -1,4 +1,10 @@
 # listenai-laid-installer
+> **已冻结（FROZEN）｜freeze-20261111｜2026-11-11**
+>
+> 本仓库于 2026-11-11 冻结，仅保留历史与只读参考，不再接收功能变更、新的使用入口或依赖升级。
+> 冻结标记：annotation tag `freeze-20261111`（NOAH-45 云端 Skill 库治理 / NOAH-58 执行）。
+> 现状：已由 `usb-tree` 替代，安装与查询入口以 `usb-tree` 为准；本仓库仅保留历史文档。
+> 冻结不删除仓库、分支、历史提交与各节点本机副本；解冻需郑保山明确批准并在 issue 留痕后执行。
 
 已降级的文档入口：说明 `laid` / `audio-list` 的安装方式与验证步骤，并指向 `listenai-play` 里的唯一安装脚本。Use when 需要安装、修复或验证 PowerShell/bash/zsh 的 `laid`，查询 Windows 声卡端点与稳定 USB 标识时；实际执行请改用 `listenai-play`。
 
